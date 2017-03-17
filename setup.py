@@ -33,20 +33,22 @@ from setuptools.command.install import install as _install
 
 from nautilus_armadito import VERSION
 
-NAUTILUS_PYTHON_EXTENSION_PATH = "/usr/share/nautilus-python/extensions"
+#NAUTILUS_PYTHON_EXTENSION_PATH = "/usr/share/nautilus-python/extensions"
+NAUTILUS_PYTHON_EXTENSION_DIR = "/share/nautilus-python/extensions"
 
 class install(_install):
     def run(self):
         _install.run(self)
-        print("Installing Nautilus Python extension...")
-        if not os.path.isdir(NAUTILUS_PYTHON_EXTENSION_PATH):
+        install_dir = self.prefix + NAUTILUS_PYTHON_EXTENSION_DIR
+        print("Installing Nautilus Python extension in %s..." % (install_dir,))
+        if not os.path.isdir(install_dir):
             try:
-                os.mkdir(NAUTILUS_PYTHON_EXTENSION_PATH)
+                os.makedirs(install_dir, mode = 0o755, exist_ok = True)
             except OSError:
-                print("WARNING: Nautilus Python extension have not been installed (%s cannot be created)" % NAUTILUS_PYTHON_EXTENSION_PATH)
+                print("WARNING: Nautilus Python extension have not been installed (%s cannot be created)" % install_dir)
                 return
         try:
-            shutil.copy("./nautilus_armadito/nautilus_armadito_extension.py", NAUTILUS_PYTHON_EXTENSION_PATH)
+            shutil.copy("./nautilus_armadito/nautilus_armadito_extension.py", install_dir)
         except IOError:
             print("WARNING: Nautilus Python extension have not been installed (permission denied)")
             return
@@ -71,7 +73,7 @@ setup(
         "Topic :: Utilities",
         "License :: OSI Approved :: GPLv3 License",
     ],
-    packages = ['nautilus_armadito'],
+#    packages = ['nautilus_armadito'],
     cmdclass = {"install": install}
 #    data_files = [('share/icons/hicolor/scalable/apps', ['icons/scalable/indicator-armadito-dark.svg', 'icons/scalable/indicator-armadito.svg'])]
 )
