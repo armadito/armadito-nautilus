@@ -34,16 +34,14 @@ class ArmaditoExtension(Nautilus.MenuProvider, GObject.GObject):
             f.write(file.get_uri()[7:] + "\n")
             f.write("\n")
         filename = urllib.unquote(file.get_uri()[7:])
-        armadito = self._dbus.get_object("org.armadito.ScanService", "/")
-        iface = dbus.Interface(armadito, "org.armadito.ScanApplication")
+        armadito_service = self._dbus.get_object("org.armadito.AntivirusService", "/")
+        iface = dbus.Interface(armadito_service, "org.armadito.AntivirusInterface")
         iface.scan(filename)
 
     def get_file_items(self, window, files):
         if len(files) != 1:
             return
-        
         file = files[0]
-        
         item = Nautilus.MenuItem(name='NautilusPython::scanwitharmadito',
                                  label='Scan with Armadito...',
                                  tip='Scan %s with Armadito...' % file.get_name(),
