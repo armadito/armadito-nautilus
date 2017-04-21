@@ -27,32 +27,64 @@
 # Thank you!
 
 import os
+import glob
 import shutil
+import stat
 from setuptools import setup, find_packages
 from setuptools.command.install import install as _install
+from babel.messages import frontend as babel
 
 from nautilus_armadito import VERSION
 
 #NAUTILUS_PYTHON_EXTENSION_PATH = "/usr/share/nautilus-python/extensions"
 NAUTILUS_PYTHON_EXTENSION_DIR = "/share/nautilus-python/extensions"
 
+def do_install_file(file, install_dir):
+    print("Installing %s in %s..." % (file, install_dir))
+    try:
+        os.makedirs(install_dir, mode = 0o755, exist_ok = True)
+    except OSError:
+        print("WARNING: cannot create directory %s" % install_dir)
+        return
+    try:
+        shutil.copy(file, install_dir)
+    except IOError:
+        print("WARNING: cannot copy file %s" % (file,))
+    mode = stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
+    try:
+        base_file = os.path.basename(file)
+        os.chmod(install_dir + '/' + base_file, mode)
+    except IOError:
+        print("WARNING: cannot chmod %s" % (base_file,))
+
 class install(_install):
+    def get_langs(self):
+        return [os.path.basename(os.path.dirname(x)) for x in glob.iglob('po/*/LC_MESSAGES')]
+
     def run(self):
         _install.run(self)
-        install_dir = self.prefix + NAUTILUS_PYTHON_EXTENSION_DIR
-        print("Installing Nautilus Python extension in %s..." % (install_dir,))
-        if not os.path.isdir(install_dir):
-            try:
-                os.makedirs(install_dir, mode = 0o755, exist_ok = True)
-            except OSError:
-                print("WARNING: Nautilus Python extension have not been installed (%s cannot be created)" % install_dir)
-                return
-        try:
-            shutil.copy("./nautilus_armadito/nautilus_armadito_extension.py", install_dir)
-        except IOError:
-            print("WARNING: Nautilus Python extension have not been installed (permission denied)")
-            return
-        print("Done!")
+        do_install_file('./nautilus_armadito/nautilus_armadito_extension.py', self.prefix + NAUTILUS_PYTHON_EXTENSION_DIR)
+        self.run_command('compile_catalog')
+        for lang in self.get_langs():
+            do_install_file('po/%s/LC_MESSAGES/nautilus-armadito.mo' % (lang,), self.prefix + '/share/locale/%s/LC_MESSAGES' % (lang,))
+
+#class install(_install):
+#    def run(self):
+#        _install.run(self)
+#        install_dir = self.prefix + NAUTILUS_PYTHON_EXTENSION_DIR
+#        print("Installing Nautilus Python extension in %s..." % (install_dir,))
+#        if not os.path.isdir(install_dir):
+#            try:
+#                os.makedirs(install_dir, mode = 0o755, exist_ok = True)
+#            except OSError:
+#                print("WARNING: Nautilus Python extension have not been installed (%s cannot be created)" % install_dir)
+#                return
+#        try:
+#            shutil.copy("./nautilus_armadito/nautilus_armadito_extension.py", install_dir)
+#        except IOError:
+#            print("WARNING: Nautilus Python extension have not been installed (permission denied)")
+#            return
+#        print("Done!")
 
 
 def read(filename):
