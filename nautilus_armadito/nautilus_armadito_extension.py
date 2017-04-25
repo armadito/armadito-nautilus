@@ -49,7 +49,7 @@ class ArmaditoExtension(Nautilus.MenuProvider, GObject.GObject):
         filename = urllib.unquote(file.get_uri()[7:])
         armadito_service = self._dbus.get_object("org.armadito.AntivirusService", "/")
         iface = dbus.Interface(armadito_service, "org.armadito.AntivirusInterface")
-        iface.Scan(filename)
+        iface.scan(filename)
 
     def get_file_items(self, window, files):
         if len(files) != 1:
